@@ -92,7 +92,7 @@ const App: React.FC = () => {
       
       // 2. Setup the model
 const model = genAI.getGenerativeModel({ 
-  model: "gemini-1.5-flash" 
+  "gemini-1.5-flash-latest" 
 }, { apiVersion: 'v1' });
       
      const prompt = `
