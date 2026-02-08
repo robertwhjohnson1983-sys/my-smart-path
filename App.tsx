@@ -3,7 +3,7 @@ import { createRoot } from 'react-dom/client';
 import { GoogleGenerativeAI } from "@google/generative-ai";
 import { RecruiterAnalysis } from './types';
 
-// PDF and Word parsing support
+// PDF and Word parsing support via esm.sh
 const PDFJS_URL = 'https://esm.sh/pdfjs-dist@4.10.38';
 const PDFJS_WORKER_URL = 'https://esm.sh/pdfjs-dist@4.10.38/build/pdf.worker.min.mjs';
 const MAMMOTH_URL = 'https://esm.sh/mammoth@1.8.0';
@@ -12,127 +12,129 @@ const App: React.FC = () => {
   const [resume, setResume] = useState('');
   const [jobDescription, setJobDescription] = useState('');
   const [loading, setLoading] = useState(false);
+  const [parsingFile, setParsingFile] = useState(false);
   const [result, setResult] = useState<RecruiterAnalysis | null>(null);
   const [error, setError] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
+  // --- FILE PARSING LOGIC ---
   const extractTextFromPDF = async (file: File): Promise<string> => {
     try {
       // @ts-ignore
       const pdfjsLib = await import(PDFJS_URL);
       pdfjsLib.GlobalWorkerOptions.workerSrc = PDFJS_WORKER_URL;
       const arrayBuffer = await file.arrayBuffer();
-      const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
-      let text = '';
+      const loadingTask = pdfjsLib.getDocument({ data: arrayBuffer });
+      const pdf = await loadingTask.promise;
+      let fullText = '';
       for (let i = 1; i <= pdf.numPages; i++) {
         const page = await pdf.getPage(i);
-        const content = await page.getTextContent();
-        text += content.items.map((item: any) => item.str).join(' ') + '\n';
+        const textContent = await page.getTextContent();
+        const pageText = textContent.items.map((item: any) => item.str).join(' ');
+        fullText += pageText + '\n';
       }
-      return text;
-    } catch (err) { throw new Error('PDF Parse Error'); }
+      return fullText;
+    } catch (err) {
+      throw new Error('Failed to parse PDF.');
+    }
+  };
+
+  const extractTextFromWord = async (file: File): Promise<string> => {
+    try {
+      // @ts-ignore
+      const mammoth = await import(MAMMOTH_URL);
+      const arrayBuffer = await file.arrayBuffer();
+      const result = await mammoth.extractRawText({ arrayBuffer });
+      return result.value;
+    } catch (err) {
+      throw new Error('Failed to parse Word document.');
+    }
   };
 
   const handleFileRead = async (file: File) => {
-    const name = file.name.toLowerCase();
+    setError(null);
+    setParsingFile(true);
+    const fileName = file.name.toLowerCase();
     try {
-      if (name.endsWith('.pdf')) setResume(await extractTextFromPDF(file));
-      else {
+      if (fileName.endsWith('.pdf')) {
+        setResume(await extractTextFromPDF(file));
+      } else if (fileName.endsWith('.docx')) {
+        setResume(await extractTextFromWord(file));
+      } else if (fileName.endsWith('.txt') || fileName.endsWith('.md')) {
         const reader = new FileReader();
         reader.onload = (e) => setResume(e.target?.result as string);
         reader.readAsText(file);
+      } else {
+        throw new Error('Unsupported file type.');
       }
-    } catch (err: any) { setError(err.message); }
+    } catch (err: any) {
+      setError(err.message);
+    } finally {
+      setParsingFile(false);
+    }
   };
 
+  const handleGoogleDriveClick = () => {
+    alert("Google Drive integration requires a Google Cloud Project Client ID and the Google Picker API enabled.");
+  };
+
+  // --- AI ANALYSIS LOGIC ---
   const analyzeMatch = async () => {
-    if (!resume.trim()) return setError('Please provide a resume.');
+    if (!resume.trim()) {
+      setError('A resume is required for analysis.');
+      return;
+    }
+
     setLoading(true);
     setError(null);
 
     try {
-      // THE NEW 2026 STANDARD INITIALIZATION
+      // 1. Initialize with the Key
       const genAI = new GoogleGenerativeAI("AIzaSyAZlGZd9KaDy9bJf0Sv1gnOGlasj6lNXY8");
+
+      // 2. USE THE STABLE VERSION v1
+      const model = genAI.getGenerativeModel(
+        { model: "gemini-1.5-flash" },
+        { apiVersion: "v1" }
+      );
       
-      // We are going back to the base model name but keeping the v1 requirement
-      const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+      const prompt = `
+        ROLE: Senior Talent Acquisition Specialist & Executive Resume Writer.
+        TASK: Perform a high-fidelity audit of this Resume against the Job Description.
+        
+        RESUME: ${resume}
+        JOB DESCRIPTION: ${jobDescription || "None (Provide a general career strength audit if JD is missing)"}
+        
+        OUTPUT: Return ONLY valid JSON matching the RecruiterAnalysis structure.
+      `;
 
-      const prompt = `Analyze this Resume against this Job Description. 
-      Resume: ${resume} 
-      JD: ${jobDescription}
-      Return ONLY a JSON object matching the RecruiterAnalysis type.`;
+      const result = await model.generateContent(prompt);
+      const response = await result.response;
+      const rawText = response.text();
+      const cleanedText = rawText.replace(/```json|```/g, "").trim();
+      setResult(JSON.parse(cleanedText));
 
-      const request = await model.generateContent(prompt);
-      const response = await request.response;
-      const text = response.text().replace(/```json|```/g, "").trim();
-      setResult(JSON.parse(text));
     } catch (err: any) {
-      console.error(err);
-      setError("AI Engine error. This is likely a project permission issue in Google AI Studio.");
+      console.error("AI Error Details:", err);
+      setError('Analysis failed. This is usually a Google Project linking issue. Try creating a fresh API key in a new project.');
     } finally {
       setLoading(false);
     }
   };
 
-  const getScoreTextColor = (s: number | null) => s && s >= 75 ? 'text-emerald-400' : s && s >= 50 ? 'text-amber-400' : 'text-rose-400';
+  // --- UI HELPER FUNCTIONS ---
+  const getScoreTextColor = (score: number | null) => {
+    if (score === null) return 'text-gray-400';
+    if (score >= 75) return 'text-emerald-400';
+    if (score >= 51) return 'text-amber-400';
+    return 'text-rose-400';
+  };
 
-  return (
-    <div className="min-h-screen bg-[#111827] text-white p-8">
-      <div className="max-w-4xl mx-auto text-center mb-12">
-        <h1 className="text-4xl font-black mb-2">My Smart Path</h1>
-        <p className="text-sky-400 uppercase tracking-widest font-bold">Intelligent Career Alignment</p>
-      </div>
+  const getScoreBorderColor = (score: number | null) => {
+    if (score === null) return 'border-gray-500/20';
+    if (score >= 75) return 'border-emerald-500/20';
+    if (score >= 51) return 'border-amber-500/20';
+    return 'border-rose-500/20';
+  };
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-8">
-        <textarea 
-          className="bg-gray-900 border-2 border-gray-800 p-4 rounded-2xl h-64 text-sm"
-          placeholder="Paste Resume..."
-          value={resume}
-          onChange={(e) => setResume(e.target.value)}
-        />
-        <textarea 
-          className="bg-gray-900 border-2 border-gray-800 p-4 rounded-2xl h-64 text-sm"
-          placeholder="Paste Job Description..."
-          value={jobDescription}
-          onChange={(e) => setJobDescription(e.target.value)}
-        />
-      </div>
-
-      <div className="flex justify-center mb-12">
-        <button 
-          onClick={analyzeMatch}
-          disabled={loading}
-          className="bg-indigo-600 hover:bg-indigo-700 px-12 py-4 rounded-full font-black transition-all"
-        >
-          {loading ? 'Processing...' : 'Run Analysis'}
-        </button>
-      </div>
-
-      {error && <div className="bg-rose-900/20 border border-rose-500 p-4 rounded-xl text-rose-200 mb-8">{error}</div>}
-
-      {result && (
-        <div className="bg-gray-900 p-8 rounded-[2rem] border border-gray-800">
-          <div className="text-center mb-8">
-            <div className="text-6xl font-black mb-2">{result.section1.score}</div>
-            <div className="text-xs uppercase tracking-tighter text-gray-400">ATS Compatibility Score</div>
-          </div>
-          <div className="space-y-4">
-            <p className="italic text-gray-300">"{result.section1.audit}"</p>
-            <div className="p-4 bg-black/30 rounded-xl border border-gray-700">
-              <h3 className="font-bold text-sky-400 mb-2">Next Step:</h3>
-              <p>{result.section2.actionStep}</p>
-            </div>
-          </div>
-        </div>
-      )}
-    </div>
-  );
-};
-
-const container = document.getElementById('root');
-if (container) {
-  const root = createRoot(container);
-  root.render(<App />);
-}
-
-export default App;
+  const getBarBgColor = (strength: number) => {
