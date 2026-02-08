@@ -52,8 +52,9 @@ const App: React.FC = () => {
     setResult(null);
 
     try {
+      // API Key and Stable Model Configuration
       const genAI = new GoogleGenerativeAI("AIzaSyAZlGZd9KaDy9bJf0Sv1gnOGlasj6lNXY8");
-      const model = genAI.getGenerativeModel({ model: "gemini-3-flash-preview" });
+      const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
       
       const prompt = `
         Return ONLY a JSON object. No markdown.
@@ -77,7 +78,8 @@ const App: React.FC = () => {
       const end = text.lastIndexOf('}') + 1;
       setResult(JSON.parse(text.substring(start, end)));
     } catch (err: any) {
-      setError('Analysis failed. Try clicking Run again.');
+      console.error("AI Error:", err);
+      setError(`Access Denied (403) or Connection Error. Check Google AI Studio key restrictions.`);
     } finally { setLoading(false); }
   };
 
@@ -107,7 +109,6 @@ const App: React.FC = () => {
       </div>
 
       <div className="max-w-6xl mx-auto py-12 px-4">
-        {/* EQUAL HEIGHT INPUT GRID */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-12 items-stretch">
           <div className="flex flex-col">
             <div className="flex justify-between items-center mb-4">
@@ -116,7 +117,6 @@ const App: React.FC = () => {
                 <button onClick={() => fileInputRef.current?.click()} className="text-[10px] font-black bg-gray-800 px-3 py-1 rounded-md border border-gray-700 hover:bg-gray-700 uppercase">
                   {parsingFile ? 'Parsing...' : 'Upload'}
                 </button>
-                <button className="text-[10px] font-black bg-gray-800 px-3 py-1 rounded-md border border-gray-700 hover:bg-gray-700 uppercase">Drive</button>
               </div>
             </div>
             <textarea className="w-full flex-grow p-6 rounded-3xl bg-gray-900 border-2 border-gray-800 text-white min-h-[400px] outline-none focus:border-indigo-500 font-mono text-xs transition-all" value={resume} onChange={e => setResume(e.target.value)} />
@@ -131,35 +131,24 @@ const App: React.FC = () => {
           </div>
         </div>
 
-        {/* BUTTON WITH LOADING ANIMATION */}
         <div className="flex justify-center mb-16">
           <button 
             onClick={analyzeMatch} 
             disabled={loading} 
             className={`px-12 py-5 rounded-full font-black text-lg shadow-2xl transition-all active:scale-95 flex items-center gap-3 ${loading ? 'bg-indigo-900 animate-pulse cursor-wait' : 'bg-indigo-600 hover:bg-indigo-700'}`}
           >
-            {loading ? (
-              <>
-                Scanning Path
-                <span className="flex gap-1">
-                  <span className="w-1.5 h-1.5 bg-white rounded-full animate-bounce [animation-delay:-0.3s]"></span>
-                  <span className="w-1.5 h-1.5 bg-white rounded-full animate-bounce [animation-delay:-0.15s]"></span>
-                  <span className="w-1.5 h-1.5 bg-white rounded-full animate-bounce"></span>
-                </span>
-              </>
-            ) : 'Run My Path'}
+            {loading ? 'Scanning Path...' : 'Run My Path'}
           </button>
         </div>
 
         {error && <div className="p-4 bg-rose-900/20 border border-rose-500 rounded-2xl text-rose-200 mb-8">{error}</div>}
 
-        {/* RESULTS SECTION */}
         {result && (
-          <div className="space-y-12 animate-in fade-in slide-in-from-bottom-4 duration-700">
+          <div className="space-y-12 animate-in fade-in duration-700">
             <div className="bg-gray-900 p-10 rounded-[3rem] border border-gray-800 flex flex-col md:flex-row gap-10 items-center">
               <div className={`text-7xl font-black ${getScoreColor(result.section1.score)}`}>{result.section1.score}</div>
-              <div className="space-y-4 text-center md:text-left">
-                 <div className="flex flex-col md:flex-row items-center gap-4">
+              <div className="space-y-4">
+                 <div className="flex items-center gap-4">
                    <h2 className="text-2xl font-black uppercase tracking-tighter">Section 1: ATS Formatting</h2>
                    <span className="bg-emerald-500 text-[10px] font-black px-3 py-1 rounded-full uppercase">{result.section1.verdict}</span>
                  </div>
@@ -218,9 +207,11 @@ const App: React.FC = () => {
   );
 };
 
+// INITIALIZATION LOGIC
 const container = document.getElementById('root');
 if (container) {
   const root = createRoot(container);
   root.render(<App />);
 }
+
 export default App;
