@@ -78,7 +78,7 @@ const App: React.FC = () => {
     alert("Google Drive integration requires a Google Cloud Project Client ID.");
   };
 
-  // --- AI ANALYSIS (GEMINI 3 CALIBRATION) ---
+  // --- AI ANALYSIS (WITH JSON BULLETPROOFING) ---
   const analyzeMatch = async () => {
     if (!resume.trim()) {
       setError('A resume is required for analysis.');
@@ -86,31 +86,40 @@ const App: React.FC = () => {
     }
     setLoading(true);
     setError(null);
+    setResult(null); 
 
     try {
       const genAI = new GoogleGenerativeAI("AIzaSyAZlGZd9KaDy9bJf0Sv1gnOGlasj6lNXY8");
-
-      // Updated to use the Gemini 3 Flash Preview as shown in your Studio project
-      const model = genAI.getGenerativeModel({ 
-        model: "gemini-3-flash-preview" 
-      });
+      const model = genAI.getGenerativeModel({ model: "gemini-3-flash-preview" });
       
       const prompt = `
-        ROLE: Senior Talent Acquisition Specialist.
-        TASK: Perform a high-fidelity audit of this Resume against the Job Description.
-        RESUME: ${resume}
-        JOB DESCRIPTION: ${jobDescription || "Provide a general career strength audit"}
-        OUTPUT: Return ONLY valid JSON matching the RecruiterAnalysis structure.
+        Return ONLY a JSON object. No intro text, no markdown. 
+        Structure:
+        {
+          "section1": { "score": 85, "verdict": "Readable", "audit": "Audit text" },
+          "section2": { "score": 90, "analysis": "Analysis", "actionStep": "Action" }
+        }
+        Resume: ${resume.substring(0, 5000)}
+        JD: ${jobDescription.substring(0, 3000)}
       `;
 
-      const result = await model.generateContent(prompt);
-      const response = await result.response;
-      const rawText = response.text();
-      const cleanedText = rawText.replace(/```json|```/g, "").trim();
-      setResult(JSON.parse(cleanedText));
+      const request = await model.generateContent(prompt);
+      const response = await request.response;
+      const text = response.text();
+      
+      // Look for the JSON object boundaries
+      const start = text.indexOf('{');
+      const end = text.lastIndexOf('}') + 1;
+      
+      if (start === -1 || end === 0) {
+        throw new Error("AI output format was invalid.");
+      }
+      
+      const cleanedJson = text.substring(start, end);
+      setResult(JSON.parse(cleanedJson));
     } catch (err: any) {
-      console.error("Debug Info:", err);
-      setError('The AI engine returned an error. This usually means the preview model is under heavy load or the API key project needs to enable "Gemini 3 Flash Preview" explicitly.');
+      console.error("AI Error:", err);
+      setError('Analysis failed to load. Please try again or check your API key project settings.');
     } finally {
       setLoading(false);
     }
@@ -125,7 +134,6 @@ const App: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-[#111827] text-white">
-      {/* Logo Header Section */}
       <div className="bg-gradient-to-b from-[#1f2937] to-[#111827] pt-12 pb-8 border-b border-gray-800 text-center">
         <div className="max-w-6xl mx-auto px-4 flex flex-col items-center">
           <div className="flex items-center justify-center mb-8 relative">
@@ -148,7 +156,6 @@ const App: React.FC = () => {
 
       <div className="max-w-6xl mx-auto py-12 px-4">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-12">
-          {/* Resume Input */}
           <div className="flex flex-col space-y-4">
             <div className="flex justify-between items-center">
               <label className="text-xs font-black text-gray-400 uppercase tracking-widest">Resume</label>
@@ -168,7 +175,6 @@ const App: React.FC = () => {
             <input type="file" ref={fileInputRef} className="hidden" onChange={(e) => e.target.files?.[0] && handleFileRead(e.target.files[0])} />
           </div>
 
-          {/* JD Input */}
           <div className="flex flex-col space-y-4">
             <label className="text-xs font-black text-gray-400 uppercase tracking-widest">Job Description</label>
             <textarea
@@ -180,7 +186,6 @@ const App: React.FC = () => {
           </div>
         </div>
 
-        {/* Action Button */}
         <div className="flex justify-center mb-16">
           <button
             onClick={analyzeMatch}
@@ -193,17 +198,16 @@ const App: React.FC = () => {
 
         {error && <div className="mb-8 p-6 bg-rose-900/30 border border-rose-500/50 text-rose-200 rounded-3xl font-bold">{error}</div>}
 
-        {/* Results Card */}
         {result && (
           <div className="bg-gray-900 p-10 rounded-[3rem] border border-gray-800 shadow-3xl animate-in fade-in duration-700">
             <div className="text-center mb-10">
               <div className={`text-7xl font-black ${getScoreTextColor(result.section1.score)}`}>{result.section1.score}</div>
-              <div className="text-xs font-black text-gray-500 uppercase tracking-widest mt-2">ATS Match Score</div>
+              <div className="text-xs font-black text-gray-500 uppercase tracking-widest mt-2">ATS Compatibility Score</div>
             </div>
             <div className="space-y-6">
               <p className="text-gray-300 italic text-lg leading-relaxed text-center">"{result.section1.audit}"</p>
-              <div className="bg-amber-500/5 border-2 border-dashed border-amber-500/30 p-8 rounded-[2rem] mt-8">
-                <h4 className="text-white font-bold text-xl mb-2">Strategy: Action Step</h4>
+              <div className="bg-amber-500/5 border-2 border-dashed border-amber-500/30 p-8 rounded-[2rem] mt-8 text-center">
+                <h4 className="text-white font-bold text-xl mb-2 uppercase tracking-tighter">Strategic Action Step</h4>
                 <p className="text-amber-100 italic font-medium leading-relaxed">"{result.section2.actionStep}"</p>
               </div>
             </div>
