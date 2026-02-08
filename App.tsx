@@ -88,7 +88,7 @@ const App: React.FC = () => {
 
     try {
       // 1. Initialize Google AI
-      const genAI = new GoogleGenerativeAI(process.env.API_KEY as string);
+      const genAI = new GoogleGenerativeAI(import.meta.env.VITE_API_KEY as string);
       
       // 2. Setup the model
       const model = genAI.getGenerativeModel({ 
