@@ -17,6 +17,7 @@ const App: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
+  // --- FILE PARSING ---
   const extractTextFromPDF = async (file: File): Promise<string> => {
     try {
       // @ts-ignore
@@ -77,6 +78,7 @@ const App: React.FC = () => {
     alert("Google Drive integration requires a Google Cloud Project Client ID.");
   };
 
+  // --- AI ANALYSIS (GEMINI 3 CALIBRATION) ---
   const analyzeMatch = async () => {
     if (!resume.trim()) {
       setError('A resume is required for analysis.');
@@ -87,17 +89,17 @@ const App: React.FC = () => {
 
     try {
       const genAI = new GoogleGenerativeAI("AIzaSyAZlGZd9KaDy9bJf0Sv1gnOGlasj6lNXY8");
-      // Using Pro to ensure we hit the v1 stable endpoint correctly
-      const model = genAI.getGenerativeModel(
-        { model: "gemini-1.5-pro" },
-        { apiVersion: "v1" }
-      );
+
+      // Updated to use the Gemini 3 Flash Preview as shown in your Studio project
+      const model = genAI.getGenerativeModel({ 
+        model: "gemini-3-flash-preview" 
+      });
       
       const prompt = `
         ROLE: Senior Talent Acquisition Specialist.
-        TASK: Audit this Resume against the Job Description.
+        TASK: Perform a high-fidelity audit of this Resume against the Job Description.
         RESUME: ${resume}
-        JOB DESCRIPTION: ${jobDescription || "General Audit"}
+        JOB DESCRIPTION: ${jobDescription || "Provide a general career strength audit"}
         OUTPUT: Return ONLY valid JSON matching the RecruiterAnalysis structure.
       `;
 
@@ -107,8 +109,8 @@ const App: React.FC = () => {
       const cleanedText = rawText.replace(/```json|```/g, "").trim();
       setResult(JSON.parse(cleanedText));
     } catch (err: any) {
-      console.error(err);
-      setError('Analysis failed. Check console for API details.');
+      console.error("Debug Info:", err);
+      setError('The AI engine returned an error. This usually means the preview model is under heavy load or the API key project needs to enable "Gemini 3 Flash Preview" explicitly.');
     } finally {
       setLoading(false);
     }
@@ -123,30 +125,30 @@ const App: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-[#111827] text-white">
-      <div className="bg-gradient-to-b from-[#1f2937] to-[#111827] pt-12 pb-8 border-b border-gray-800">
-        <div className="max-w-6xl mx-auto px-4 text-center flex flex-col items-center">
-          <div className="flex items-center justify-center mb-8">
-            <div className="flex items-center relative">
-              <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-2xl bg-gradient-to-br from-[#a3e635] to-[#65a30d] flex items-center justify-center border border-white/10 p-3 shadow-lg shadow-lime-500/20">
-                <svg className="w-10 h-10 text-[#1a2e05]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>
-              </div>
-              <div className="w-8 sm:w-14 px-0.5"><svg className="w-full h-8 text-sky-500/50" viewBox="0 0 60 30"><path d="M0 15h20l5-8h10l5 8h20" stroke="currentColor" strokeWidth="2" fill="none" /><circle cx="25" cy="7" r="1.5" fill="currentColor" /></svg></div>
-              <div className="w-20 h-20 sm:w-24 sm:h-24 rounded-2xl bg-gradient-to-br from-[#0ea5e9] to-[#0369a1] flex items-center justify-center border-2 border-sky-400/50 p-3 shadow-xl shadow-sky-500/30 z-10">
-                <svg className="w-12 h-12 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" /></svg>
-              </div>
-              <div className="w-8 sm:w-14 px-0.5"><svg className="w-full h-8 text-amber-500/50" viewBox="0 0 60 30"><path d="M0 15h20l5 8h10l5-8h20" stroke="currentColor" strokeWidth="2" fill="none" /><circle cx="25" cy="23" r="1.5" fill="currentColor" /></svg></div>
-              <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-2xl bg-gradient-to-br from-[#fbbf24] to-[#d97706] flex items-center justify-center border border-white/10 p-3 shadow-lg shadow-amber-500/20">
-                <svg className="w-10 h-10 text-[#451a03]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" /></svg>
-              </div>
+      {/* Logo Header Section */}
+      <div className="bg-gradient-to-b from-[#1f2937] to-[#111827] pt-12 pb-8 border-b border-gray-800 text-center">
+        <div className="max-w-6xl mx-auto px-4 flex flex-col items-center">
+          <div className="flex items-center justify-center mb-8 relative">
+            <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-[#a3e635] to-[#65a30d] flex items-center justify-center border border-white/10 p-3 shadow-lg shadow-lime-500/20">
+              <svg className="w-10 h-10 text-[#1a2e05]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>
+            </div>
+            <div className="w-10 h-1 px-1"><div className="w-full h-0.5 bg-sky-500/30"></div></div>
+            <div className="w-20 h-20 rounded-2xl bg-gradient-to-br from-[#0ea5e9] to-[#0369a1] flex items-center justify-center border-2 border-sky-400/50 p-3 shadow-xl shadow-sky-500/30 z-10">
+              <svg className="w-12 h-12 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" /></svg>
+            </div>
+            <div className="w-10 h-1 px-1"><div className="w-full h-0.5 bg-amber-500/30"></div></div>
+            <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-[#fbbf24] to-[#d97706] flex items-center justify-center border border-white/10 p-3 shadow-lg shadow-amber-500/20">
+              <svg className="w-10 h-10 text-[#451a03]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" /></svg>
             </div>
           </div>
-          <h1 className="text-5xl font-black tracking-tight mb-2 bg-gradient-to-r from-white to-gray-400 bg-clip-text text-transparent">My Smart Path</h1>
+          <h1 className="text-5xl font-black mb-2 bg-gradient-to-r from-white to-gray-400 bg-clip-text text-transparent">My Smart Path</h1>
           <p className="text-sky-400 font-bold text-xl tracking-wide uppercase italic">Intelligent Career Alignment</p>
         </div>
       </div>
 
       <div className="max-w-6xl mx-auto py-12 px-4">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-12">
+          {/* Resume Input */}
           <div className="flex flex-col space-y-4">
             <div className="flex justify-between items-center">
               <label className="text-xs font-black text-gray-400 uppercase tracking-widest">Resume</label>
@@ -165,6 +167,8 @@ const App: React.FC = () => {
             />
             <input type="file" ref={fileInputRef} className="hidden" onChange={(e) => e.target.files?.[0] && handleFileRead(e.target.files[0])} />
           </div>
+
+          {/* JD Input */}
           <div className="flex flex-col space-y-4">
             <label className="text-xs font-black text-gray-400 uppercase tracking-widest">Job Description</label>
             <textarea
@@ -176,11 +180,12 @@ const App: React.FC = () => {
           </div>
         </div>
 
+        {/* Action Button */}
         <div className="flex justify-center mb-16">
           <button
             onClick={analyzeMatch}
             disabled={loading}
-            className={`px-12 py-5 rounded-full font-black text-lg text-white transition-all transform hover:scale-105 active:scale-95 shadow-2xl ${loading ? 'bg-gray-700' : 'bg-indigo-600 hover:bg-indigo-700'}`}
+            className={`px-12 py-5 rounded-full font-black text-lg text-white transition-all transform hover:scale-105 active:scale-95 shadow-2xl ${loading ? 'bg-gray-700' : 'bg-indigo-600 hover:bg-indigo-700 shadow-indigo-500/20'}`}
           >
             {loading ? 'AI Engine Processing...' : 'Run My Path'}
           </button>
@@ -188,17 +193,18 @@ const App: React.FC = () => {
 
         {error && <div className="mb-8 p-6 bg-rose-900/30 border border-rose-500/50 text-rose-200 rounded-3xl font-bold">{error}</div>}
 
+        {/* Results Card */}
         {result && (
-          <div className="bg-gray-900 p-10 rounded-[3rem] border border-gray-800 shadow-3xl">
+          <div className="bg-gray-900 p-10 rounded-[3rem] border border-gray-800 shadow-3xl animate-in fade-in duration-700">
             <div className="text-center mb-10">
               <div className={`text-7xl font-black ${getScoreTextColor(result.section1.score)}`}>{result.section1.score}</div>
-              <div className="text-xs font-black text-gray-500 uppercase tracking-widest">ATS Match Score</div>
+              <div className="text-xs font-black text-gray-500 uppercase tracking-widest mt-2">ATS Match Score</div>
             </div>
             <div className="space-y-6">
-              <p className="text-gray-300 italic text-lg leading-relaxed">"{result.section1.audit}"</p>
-              <div className="bg-amber-500/5 border-2 border-dashed border-amber-500/30 p-6 rounded-3xl">
-                <h4 className="text-white font-bold mb-1">Strategy Action:</h4>
-                <p className="text-amber-100 italic">{result.section2.actionStep}</p>
+              <p className="text-gray-300 italic text-lg leading-relaxed text-center">"{result.section1.audit}"</p>
+              <div className="bg-amber-500/5 border-2 border-dashed border-amber-500/30 p-8 rounded-[2rem] mt-8">
+                <h4 className="text-white font-bold text-xl mb-2">Strategy: Action Step</h4>
+                <p className="text-amber-100 italic font-medium leading-relaxed">"{result.section2.actionStep}"</p>
               </div>
             </div>
           </div>
