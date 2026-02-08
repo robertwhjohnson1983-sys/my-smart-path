@@ -1,4 +1,5 @@
 import React, { useState, useRef } from 'react';
+import { createRoot } from 'react-dom/client';
 import { GoogleGenerativeAI } from "@google/generative-ai";
 import { RecruiterAnalysis } from './types';
 
@@ -86,84 +87,39 @@ const App: React.FC = () => {
     setError(null);
 
     try {
-      const ai = new GoogleGenAI({ apiKey: process.env.API_KEY as string });
+      // 1. Initialize Google AI
+      const genAI = new GoogleGenerativeAI(process.env.API_KEY as string);
       
-      const prompt = `
-        ROLE: You are the My Smart Path (ICA) Engine, a Senior Talent Acquisition Specialist. 
-        TASK: Analyze the provided Resume and Job Description.
-        
-        RESUME CONTENT:
-        ${resume}
-        
-        JOB DESCRIPTION:
-        ${jobDescription || "NO JOB DESCRIPTION PROVIDED"}
-        
-        STRICT RULES:
-        1. SECTION 1 is MANDATORY: Analyze ATS Style & Readability. Audit columns, tables, and graphics. 
-           Score it 0-100. Verdict must be "Machine Readable" or "Danger: Needs Reformat."
-        2. SECTION 2: Career Alignment. If JD is missing, state "Awaiting Job Description." 
-           If JD exists:
-           - Score alignment 0-100.
-           - Provide matchVerdict: A one-word sentence (e.g., "Match." or "Strong Match.") followed by a description of why.
-           - Identify Top 3 Fits: Specific experiences that make the candidate strong.
-           - Identify Top 3 Gaps: Specific missing qualifications.
-           - Provide ONE specific "Action Step" bullet point rewrite.
-        3. TRANSFERABLE SKILLS: Identify 3-5 transferable skills with strength (0-100).
-        4. Do NOT invent work experience. No assumptions on race/gender/identity.
-      `;
-
-      const response = await ai.models.generateContent({
-        model: 'gemini-3-pro-preview',
-        contents: prompt,
-        config: {
-          responseMimeType: 'application/json',
-          responseSchema: {
-            type: Type.OBJECT,
-            properties: {
-              section1: {
-                type: Type.OBJECT,
-                properties: {
-                  score: { type: Type.NUMBER },
-                  audit: { type: Type.STRING },
-                  verdict: { type: Type.STRING }
-                },
-                required: ['score', 'audit', 'verdict']
-              },
-              section2: {
-                type: Type.OBJECT,
-                properties: {
-                  score: { type: Type.NUMBER, nullable: true },
-                  analysis: { type: Type.STRING },
-                  matchVerdict: { type: Type.STRING },
-                  top3Fits: { type: Type.ARRAY, items: { type: Type.STRING } },
-                  top3Gaps: { type: Type.ARRAY, items: { type: Type.STRING } },
-                  actionStep: { type: Type.STRING }
-                },
-                required: ['score', 'analysis', 'matchVerdict', 'top3Fits', 'top3Gaps', 'actionStep']
-              },
-              transferableSkills: {
-                type: Type.ARRAY,
-                items: {
-                  type: Type.OBJECT,
-                  properties: {
-                    skill: { type: Type.STRING },
-                    relevance: { type: Type.STRING },
-                    strength: { type: Type.NUMBER }
-                  },
-                  required: ['skill', 'relevance', 'strength']
-                }
-              }
-            },
-            required: ['section1', 'section2', 'transferableSkills']
-          }
-        }
+      // 2. Setup the model
+      const model = genAI.getGenerativeModel({ 
+        model: "gemini-1.5-pro",
+        generationConfig: { responseMimeType: "application/json" }
       });
+      
+     const prompt = `
+  ROLE: Senior Talent Acquisition Specialist & Executive Resume Writer.
+  TASK: Perform a high-fidelity audit of this Resume against the Job Description.
+  
+  RESUME: ${resume}
+  JOB DESCRIPTION: ${jobDescription || "None (Provide a general career strength audit if JD is missing)"}
+  
+  INSTRUCTIONS:
+  1. ATS AUDIT: Identify "parsability" issues (columns, tables, headers).
+  2. ALIGNMENT: Don't just match keywords; look for "Outcome-Based" evidence. If they mention a skill, is there a metric attached?
+  3. TRANSFERABLE SKILLS: Map specific achievements to the new role's requirements.
+  
+  OUTPUT: Return ONLY valid JSON matching the RecruiterAnalysis structure.
+`;
 
-      const analysisData: RecruiterAnalysis = JSON.parse(response.text);
-      setResult(analysisData);
+      const result = await model.generateContent(prompt);
+      const response = await result.response;
+      
+      // 3. Parse and set results
+      setResult(JSON.parse(response.text()));
+
     } catch (err: any) {
       console.error(err);
-      setError('An error occurred during engine analysis.');
+      setError('Analysis failed. Please check your API key.');
     } finally {
       setLoading(false);
     }
@@ -191,7 +147,7 @@ const App: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-[#111827] text-white">
-      {/* Header with Custom Logo Assembly */}
+      {/* Header */}
       <div className="bg-gradient-to-b from-[#1f2937] to-[#111827] pt-12 pb-8 border-b border-gray-800">
         <div className="max-w-6xl mx-auto px-4 text-center flex flex-col items-center">
           <div className="flex items-center justify-center mb-8">
@@ -308,43 +264,41 @@ const App: React.FC = () => {
                   </div>
                 </div>
 
-                {jobDescription && (
-                  <div className="space-y-10">
-                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-10">
-                      <div className="space-y-6">
-                        <h3 className="text-xl font-black text-emerald-400 uppercase tracking-tighter flex items-center">
-                          <svg className="w-6 h-6 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M5 13l4 4L19 7" /></svg>
-                          Strength Indicators (Fits)
-                        </h3>
-                        <div className="space-y-4">
-                          {result.section2.top3Fits.map((fit, i) => (
-                            <div key={i} className="bg-emerald-500/5 border border-emerald-500/20 p-5 rounded-2xl text-emerald-100 font-bold flex items-center">
-                              <span className="mr-4 text-emerald-500 opacity-50">0{i+1}</span> {fit}
-                            </div>
-                          ))}
-                        </div>
-                      </div>
-                      <div className="space-y-6">
-                        <h3 className="text-xl font-black text-rose-400 uppercase tracking-tighter flex items-center">
-                          <svg className="w-6 h-6 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" /></svg>
-                          Gap Analysis
-                        </h3>
-                        <div className="space-y-4">
-                          {result.section2.top3Gaps.map((gap, i) => (
-                            <div key={i} className="bg-rose-500/5 border border-rose-500/20 p-5 rounded-2xl text-rose-100 font-bold flex items-center">
-                              <span className="mr-4 text-rose-500 opacity-50">0{i+1}</span> {gap}
-                            </div>
-                          ))}
-                        </div>
+                <div className="space-y-10">
+                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-10">
+                    <div className="space-y-6">
+                      <h3 className="text-xl font-black text-emerald-400 uppercase tracking-tighter flex items-center">
+                        <svg className="w-6 h-6 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M5 13l4 4L19 7" /></svg>
+                        Strength Indicators (Fits)
+                      </h3>
+                      <div className="space-y-4">
+                        {result.section2.top3Fits.map((fit, i) => (
+                          <div key={i} className="bg-emerald-500/5 border border-emerald-500/20 p-5 rounded-2xl text-emerald-100 font-bold flex items-center">
+                            <span className="mr-4 text-emerald-500 opacity-50">0{i+1}</span> {fit}
+                          </div>
+                        ))}
                       </div>
                     </div>
-                    <div className="bg-amber-500/5 border-2 border-dashed border-amber-500/30 p-8 rounded-[3rem] relative">
-                      <div className="absolute -top-3 left-8 bg-amber-500 text-[#451a03] text-[10px] font-black px-3 py-1 rounded-full uppercase tracking-widest">Power Bullet Optimization</div>
-                      <h4 className="text-xl font-bold text-white mb-2">Strategy: Action Step</h4>
-                      <p className="text-amber-100 font-black italic text-lg leading-relaxed italic">"{result.section2.actionStep}"</p>
+                    <div className="space-y-6">
+                      <h3 className="text-xl font-black text-rose-400 uppercase tracking-tighter flex items-center">
+                        <svg className="w-6 h-6 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" /></svg>
+                        Gap Analysis
+                      </h3>
+                      <div className="space-y-4">
+                        {result.section2.top3Gaps.map((gap, i) => (
+                          <div key={i} className="bg-rose-500/5 border border-rose-500/20 p-5 rounded-2xl text-rose-100 font-bold flex items-center">
+                            <span className="mr-4 text-rose-500 opacity-50">0{i+1}</span> {gap}
+                          </div>
+                        ))}
+                      </div>
                     </div>
                   </div>
-                )}
+                  <div className="bg-amber-500/5 border-2 border-dashed border-amber-500/30 p-8 rounded-[3rem] relative">
+                    <div className="absolute -top-3 left-8 bg-amber-500 text-[#451a03] text-[10px] font-black px-3 py-1 rounded-full uppercase tracking-widest">Power Bullet Optimization</div>
+                    <h4 className="text-xl font-bold text-white mb-2">Strategy: Action Step</h4>
+                    <p className="text-amber-100 font-black italic text-lg leading-relaxed">"{result.section2.actionStep}"</p>
+                  </div>
+                </div>
               </div>
             </div>
 
@@ -381,4 +335,11 @@ const App: React.FC = () => {
     </div>
   );
 };
+
+const container = document.getElementById('root');
+if (container) {
+  const root = createRoot(container);
+  root.render(<App />);
+}
+
 export default App;
