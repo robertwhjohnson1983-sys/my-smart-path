@@ -1,5 +1,5 @@
 import React, { useState, useRef } from 'react';
-import { GoogleGenAI, Type } from '@google/genai';
+import { GoogleGenerativeAI } from "@google/generative-ai";
 import { RecruiterAnalysis } from './types';
 
 // PDF and Word parsing support via esm.sh
