@@ -53,7 +53,7 @@ const App: React.FC = () => {
 
     try {
       // API Key and Stable Model Configuration
-      const genAI = new GoogleGenerativeAI("AIzaSyAZlGZd9KaDy9bJf0Sv1gnOGlasj6lNXY8");
+      const genAI = new GoogleGenerativeAI("AIzaSyAmYXmQq8P0gIMGFKD6zVfMJzHqMMkE8C8");
      const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
       
       const prompt = `
