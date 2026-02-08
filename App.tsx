@@ -2,10 +2,8 @@ import React, { useState, useRef } from 'react';
 import { createRoot } from 'react-dom/client';
 import { GoogleGenerativeAI } from "@google/generative-ai";
 
-// PDF and Word parsing support
 const PDFJS_URL = 'https://esm.sh/pdfjs-dist@4.10.38';
 const PDFJS_WORKER_URL = 'https://esm.sh/pdfjs-dist@4.10.38/build/pdf.worker.min.mjs';
-const MAMMOTH_URL = 'https://esm.sh/mammoth@1.8.0';
 
 const App: React.FC = () => {
   const [resume, setResume] = useState('');
@@ -16,7 +14,6 @@ const App: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  // --- FILE PARSING ---
   const extractTextFromPDF = async (file: File): Promise<string> => {
     try {
       // @ts-ignore
@@ -37,9 +34,8 @@ const App: React.FC = () => {
   const handleFileRead = async (file: File) => {
     setError(null);
     setParsingFile(true);
-    const fileName = file.name.toLowerCase();
     try {
-      if (fileName.endsWith('.pdf')) setResume(await extractTextFromPDF(file));
+      if (file.name.toLowerCase().endsWith('.pdf')) setResume(await extractTextFromPDF(file));
       else {
         const reader = new FileReader();
         reader.onload = (e) => setResume(e.target?.result as string);
@@ -49,7 +45,6 @@ const App: React.FC = () => {
     finally { setParsingFile(false); }
   };
 
-  // --- AI ANALYSIS ---
   const analyzeMatch = async () => {
     if (!resume.trim()) return setError('Please provide a resume.');
     setLoading(true);
@@ -69,7 +64,7 @@ const App: React.FC = () => {
             "score": 80, "headline": "Strong Fit", "analysis": "text",
             "strengthIndicators": ["fit1", "fit2"], "gapAnalysis": ["gap1", "gap2"], "actionStep": "text"
           },
-          "skillsMapping": [{"skill": "LEADERSHIP", "pct": 90}, {"skill": "TECH", "pct": 70}]
+          "skillsMapping": [{"skill": "STAKEHOLDER MGMT", "pct": 90}, {"skill": "RECRUITING OPS", "pct": 85}, {"skill": "AI TOOLS", "pct": 75}, {"skill": "COMMUNICATION", "pct": 95}]
         }
         Resume: ${resume.substring(0, 5000)}
         JD: ${jobDescription.substring(0, 3000)}
@@ -90,7 +85,7 @@ const App: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-[#111827] text-white">
-      {/* HEADER & LOGO */}
+      {/* HEADER */}
       <div className="bg-gradient-to-b from-[#1f2937] to-[#111827] pt-12 pb-8 border-b border-gray-800 text-center">
         <div className="max-w-6xl mx-auto px-4 flex flex-col items-center">
           <div className="flex items-center justify-center mb-8 relative">
@@ -112,10 +107,10 @@ const App: React.FC = () => {
       </div>
 
       <div className="max-w-6xl mx-auto py-12 px-4">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-12">
-          {/* INPUTS */}
-          <div className="flex flex-col space-y-4">
-            <div className="flex justify-between items-center">
+        {/* EQUAL HEIGHT INPUT GRID */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-12 items-stretch">
+          <div className="flex flex-col">
+            <div className="flex justify-between items-center mb-4">
               <label className="text-xs font-black text-gray-400 uppercase tracking-widest">Resume</label>
               <div className="flex gap-2">
                 <button onClick={() => fileInputRef.current?.click()} className="text-[10px] font-black bg-gray-800 px-3 py-1 rounded-md border border-gray-700 hover:bg-gray-700 uppercase">
@@ -124,30 +119,47 @@ const App: React.FC = () => {
                 <button className="text-[10px] font-black bg-gray-800 px-3 py-1 rounded-md border border-gray-700 hover:bg-gray-700 uppercase">Drive</button>
               </div>
             </div>
-            <textarea className="w-full p-6 rounded-3xl bg-gray-900 border-2 border-gray-800 text-white min-h-[300px] outline-none focus:border-indigo-500 font-mono text-xs" value={resume} onChange={e => setResume(e.target.value)} />
+            <textarea className="w-full flex-grow p-6 rounded-3xl bg-gray-900 border-2 border-gray-800 text-white min-h-[400px] outline-none focus:border-indigo-500 font-mono text-xs transition-all" value={resume} onChange={e => setResume(e.target.value)} />
             <input type="file" ref={fileInputRef} className="hidden" onChange={e => e.target.files?.[0] && handleFileRead(e.target.files[0])} />
           </div>
-          <div className="flex flex-col space-y-4 pt-8">
-            <label className="text-xs font-black text-gray-400 uppercase tracking-widest">Job Description</label>
-            <textarea className="w-full p-6 rounded-3xl bg-gray-900 border-2 border-gray-800 text-white min-h-[300px] outline-none focus:border-indigo-500 font-mono text-xs" value={jobDescription} onChange={e => setJobDescription(e.target.value)} />
+          
+          <div className="flex flex-col">
+            <div className="flex justify-between items-center mb-4">
+              <label className="text-xs font-black text-gray-400 uppercase tracking-widest">Job Description</label>
+            </div>
+            <textarea className="w-full flex-grow p-6 rounded-3xl bg-gray-900 border-2 border-gray-800 text-white min-h-[400px] outline-none focus:border-indigo-500 font-mono text-xs transition-all" value={jobDescription} onChange={e => setJobDescription(e.target.value)} />
           </div>
         </div>
 
+        {/* BUTTON WITH LOADING ANIMATION */}
         <div className="flex justify-center mb-16">
-          <button onClick={analyzeMatch} disabled={loading} className="px-12 py-5 rounded-full font-black text-lg bg-indigo-600 hover:bg-indigo-700 shadow-2xl transition-all active:scale-95">
-            {loading ? 'AI Engine Processing...' : 'Run My Path'}
+          <button 
+            onClick={analyzeMatch} 
+            disabled={loading} 
+            className={`px-12 py-5 rounded-full font-black text-lg shadow-2xl transition-all active:scale-95 flex items-center gap-3 ${loading ? 'bg-indigo-900 animate-pulse cursor-wait' : 'bg-indigo-600 hover:bg-indigo-700'}`}
+          >
+            {loading ? (
+              <>
+                Scanning Path
+                <span className="flex gap-1">
+                  <span className="w-1.5 h-1.5 bg-white rounded-full animate-bounce [animation-delay:-0.3s]"></span>
+                  <span className="w-1.5 h-1.5 bg-white rounded-full animate-bounce [animation-delay:-0.15s]"></span>
+                  <span className="w-1.5 h-1.5 bg-white rounded-full animate-bounce"></span>
+                </span>
+              </>
+            ) : 'Run My Path'}
           </button>
         </div>
 
         {error && <div className="p-4 bg-rose-900/20 border border-rose-500 rounded-2xl text-rose-200 mb-8">{error}</div>}
 
-        {/* RESULTS */}
+        {/* RESULTS SECTION */}
         {result && (
-          <div className="space-y-12 animate-in fade-in duration-700">
+          <div className="space-y-12 animate-in fade-in slide-in-from-bottom-4 duration-700">
             <div className="bg-gray-900 p-10 rounded-[3rem] border border-gray-800 flex flex-col md:flex-row gap-10 items-center">
               <div className={`text-7xl font-black ${getScoreColor(result.section1.score)}`}>{result.section1.score}</div>
-              <div className="space-y-4">
-                 <div className="flex items-center gap-4">
+              <div className="space-y-4 text-center md:text-left">
+                 <div className="flex flex-col md:flex-row items-center gap-4">
                    <h2 className="text-2xl font-black uppercase tracking-tighter">Section 1: ATS Formatting</h2>
                    <span className="bg-emerald-500 text-[10px] font-black px-3 py-1 rounded-full uppercase">{result.section1.verdict}</span>
                  </div>
@@ -184,7 +196,7 @@ const App: React.FC = () => {
             </div>
 
             <div className="bg-gray-900 p-10 rounded-[3rem] border border-gray-800">
-               <h3 className="text-sm font-black uppercase mb-8 flex items-center gap-2">Transferable Skills Mapping</h3>
+               <h3 className="text-sm font-black uppercase mb-8 flex items-center gap-2 tracking-widest text-gray-400">Transferable Skills Mapping</h3>
                <div className="grid grid-cols-1 md:grid-cols-2 gap-x-12 gap-y-8">
                   {result.skillsMapping.map((s: any, i: number) => (
                     <div key={i} className="space-y-3">
@@ -192,8 +204,8 @@ const App: React.FC = () => {
                         <span>{s.skill}</span>
                         <span className={getScoreColor(s.pct)}>{s.pct}%</span>
                       </div>
-                      <div className="h-1.5 w-full bg-gray-800 rounded-full overflow-hidden">
-                        <div className="h-full bg-emerald-500 transition-all duration-1000" style={{ width: `${s.pct}%` }} />
+                      <div className="h-2 w-full bg-gray-800 rounded-full overflow-hidden">
+                        <div className="h-full bg-gradient-to-r from-emerald-600 to-emerald-400 transition-all duration-1000" style={{ width: `${s.pct}%` }} />
                       </div>
                     </div>
                   ))}
