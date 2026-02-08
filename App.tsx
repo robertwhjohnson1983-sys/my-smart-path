@@ -90,9 +90,9 @@ const App: React.FC = () => {
       // 1. Initialize Google AI
       const genAI = new GoogleGenerativeAI(import.meta.env.VITE_API_KEY as string);
       
-      // 2. Setup the model
+     // 2. Setup the model
 const model = genAI.getGenerativeModel({ 
-  "gemini-1.5-flash-latest" 
+  model: "gemini-1.5-flash-latest" 
 }, { apiVersion: 'v1' });
       
      const prompt = `
