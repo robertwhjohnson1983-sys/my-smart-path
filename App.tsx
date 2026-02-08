@@ -54,7 +54,7 @@ const App: React.FC = () => {
     try {
       // API Key and Stable Model Configuration
       const genAI = new GoogleGenerativeAI("AIzaSyAZlGZd9KaDy9bJf0Sv1gnOGlasj6lNXY8");
-     const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash-latest" });
+     const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
       
       const prompt = `
         Return ONLY a JSON object. No markdown.
