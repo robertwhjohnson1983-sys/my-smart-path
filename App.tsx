@@ -88,7 +88,7 @@ const App: React.FC = () => {
 
     try {
     // 1. Initialize Google AI
-const genAI = new GoogleGenerativeAI("YOUR_HARDCODED_KEY_HERE");
+const genAI = new GoogleGenerativeAI("AIzaSyAZlGZd9KaDy9bJf0Sv1gnOGlasj6lNXY8");
 
 // 2. Setup the model WITHOUT the apiVersion 'v1beta'
 const model = genAI.getGenerativeModel({ 
