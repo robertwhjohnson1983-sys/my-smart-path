@@ -90,10 +90,10 @@ const App: React.FC = () => {
       // 1. Initialize Google AI
       const genAI = new GoogleGenerativeAI(import.meta.env.VITE_API_KEY as string);
       
-     // 2. Setup the model
+ // 2. Setup the model
 const model = genAI.getGenerativeModel({ 
-  model: "gemini-1.5-flash-latest" 
-}, { apiVersion: 'v1' });
+  model: "gemini-1.5-flash" 
+}, { apiVersion: 'v1beta' });
       
      const prompt = `
   ROLE: Senior Talent Acquisition Specialist & Executive Resume Writer.
