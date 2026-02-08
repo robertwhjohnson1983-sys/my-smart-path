@@ -87,13 +87,14 @@ const App: React.FC = () => {
     setError(null);
 
     try {
-    // 1. Initialize Google AI
+// 1. Initialize Google AI
 const genAI = new GoogleGenerativeAI("AIzaSyAZlGZd9KaDy9bJf0Sv1gnOGlasj6lNXY8");
 
-// 2. Setup the model using the 2026 stable identifier
-const model = genAI.getGenerativeModel({ 
-  model: "gemini-1.5-flash-latest" 
-});
+// 2. FORCE the stable version 'v1' here
+const model = genAI.getGenerativeModel(
+  { model: "gemini-1.5-flash" }, 
+  { apiVersion: "v1" } 
+);
       
      const prompt = `
   ROLE: Senior Talent Acquisition Specialist & Executive Resume Writer.
