@@ -111,10 +111,12 @@ const model = genAI.getGenerativeModel({
 `;
 
       const result = await model.generateContent(prompt);
-      const response = await result.response;
-      
-      // 3. Parse and set results
-      setResult(JSON.parse(response.text()));
+     const response = await result.response;
+      
+      // 3. Parse and set results
+      const rawText = response.text();
+      const cleanedText = rawText.replace(/```json|```/g, "").trim();
+      setResult(JSON.parse(cleanedText));
 
     } catch (err: any) {
       console.error(err);
