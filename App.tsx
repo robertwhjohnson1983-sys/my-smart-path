@@ -92,7 +92,7 @@ const genAI = new GoogleGenerativeAI("AIzaSyAZlGZd9KaDy9bJf0Sv1gnOGlasj6lNXY8");
 
 // 2. FORCE the stable version 'v1' here
 const model = genAI.getGenerativeModel(
-  { model: "gemini-1.5-flash" }, 
+  { model: "gemini-1.5-pro" }, 
   { apiVersion: "v1" } 
 );
       
