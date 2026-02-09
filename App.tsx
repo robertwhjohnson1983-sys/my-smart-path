@@ -57,7 +57,7 @@ const App: React.FC = () => {
       if (!apiKey) throw new Error("API Key not found in Vercel settings.");
 
       const genAI = new GoogleGenerativeAI(apiKey);
-     const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+     const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash-latest" });
       
       const prompt = `
         Return ONLY a JSON object. No markdown.
