@@ -2,6 +2,7 @@
 import React, { useState, useRef } from 'react';
 import { createRoot } from 'react-dom/client';
 import { GoogleGenerativeAI } from "@google/generative-ai";
+import './index.css';
 
 const PDFJS_URL = 'https://esm.sh/pdfjs-dist@4.10.38';
 const PDFJS_WORKER_URL = 'https://esm.sh/pdfjs-dist@4.10.38/build/pdf.worker.min.mjs';
@@ -90,8 +91,8 @@ const App: React.FC = () => {
   return (
     <div className="min-h-screen bg-[#111827] text-white">
       {/* HEADER */}
-      <div className="bg-gradient-to-b from-[#1f2937] to-[#111827] pt-12 pb-8 border-b border-gray-800 text-center">
-        <h1 className="text-5xl font-black mb-2 bg-gradient-to-r from-white to-gray-400 bg-clip-text text-transparent uppercase tracking-tighter">My Smart Path</h1>
+      <div className="bg-linear-to-b from-[#1f2937] to-[#111827] pt-12 pb-8 border-b border-gray-800 text-center">
+        <h1 className="text-5xl font-black mb-2 bg-linear-to-r from-white to-gray-400 bg-clip-text text-transparent uppercase tracking-tighter">My Smart Path</h1>
         <p className="text-sky-400 font-bold text-xl tracking-widest uppercase italic">Intelligent Career Alignment</p>
       </div>
 
@@ -105,14 +106,14 @@ const App: React.FC = () => {
                 {parsingFile ? 'Parsing...' : 'Upload PDF/Doc'}
               </button>
             </div>
-            <textarea className="w-full flex-grow p-6 rounded-3xl bg-gray-900 border-2 border-gray-800 text-white min-h-[400px] outline-none focus:border-sky-500 font-mono text-xs transition-all" value={resume} onChange={e => setResume(e.target.value)} />
+            <textarea className="w-full grow p-6 rounded-3xl bg-gray-900 border-2 border-gray-800 text-white min-h-100 outline-none focus:border-sky-500 font-mono text-xs transition-all" value={resume} onChange={e => setResume(e.target.value)} />
             <input type="file" ref={fileInputRef} className="hidden" onChange={e => e.target.files?.[0] && handleFileRead(e.target.files[0])} />
           </div>
 
           {/* JD BOX */}
           <div className="flex flex-col">
             <label className="text-xs font-black text-gray-400 uppercase tracking-widest mb-4">Job Description</label>
-            <textarea className="w-full flex-grow p-6 rounded-3xl bg-gray-900 border-2 border-gray-800 text-white min-h-[400px] outline-none focus:border-sky-500 font-mono text-xs transition-all" value={jobDescription} onChange={e => setJobDescription(e.target.value)} />
+            <textarea className="w-full grow p-6 rounded-3xl bg-gray-900 border-2 border-gray-800 text-white min-h-100 outline-none focus:border-sky-500 font-mono text-xs transition-all" value={jobDescription} onChange={e => setJobDescription(e.target.value)} />
           </div>
         </div>
 
