@@ -52,15 +52,11 @@ const App: React.FC = () => {
     setResult(null);
 
     try {
-      // Pulling key securely from Vercel Environment Variables
       const apiKey = import.meta.env.VITE_GEMINI_API_KEY;
       if (!apiKey) throw new Error("API Key not found in Vercel settings.");
 
-const genAI = new GoogleGenerativeAI(apiKey);
-const model = genAI.getGenerativeModel({ 
-  model: "gemini-1.5-flash",
-  apiVersion: "v1" 
-});
+      const genAI = new GoogleGenerativeAI(apiKey);
+      const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
       
       const prompt = `
         Return ONLY a JSON object. No markdown.
@@ -85,7 +81,7 @@ const model = genAI.getGenerativeModel({
       setResult(JSON.parse(text.substring(start, end)));
     } catch (err: any) {
       console.error("AI Error:", err);
-      setError(`Error: ${err.message}. Ensure VITE_GEMINI_API_KEY is set in Vercel.`);
+      setError(`Error: ${err.message}. Check Vercel API Key.`);
     } finally { setLoading(false); }
   };
 
@@ -119,20 +115,15 @@ const model = genAI.getGenerativeModel({
           <div className="flex flex-col">
             <div className="flex justify-between items-center mb-4">
               <label className="text-xs font-black text-gray-400 uppercase tracking-widest">Resume</label>
-              <div className="flex gap-2">
-                <button onClick={() => fileInputRef.current?.click()} className="text-[10px] font-black bg-gray-800 px-3 py-1 rounded-md border border-gray-700 hover:bg-gray-700 uppercase">
-                  {parsingFile ? 'Parsing...' : 'Upload'}
-                </button>
-              </div>
+              <button onClick={() => fileInputRef.current?.click()} className="text-[10px] font-black bg-gray-800 px-3 py-1 rounded-md border border-gray-700 hover:bg-gray-700 uppercase">
+                {parsingFile ? 'Parsing...' : 'Upload'}
+              </button>
             </div>
             <textarea className="w-full flex-grow p-6 rounded-3xl bg-gray-900 border-2 border-gray-800 text-white min-h-[400px] outline-none focus:border-indigo-500 font-mono text-xs transition-all" value={resume} onChange={e => setResume(e.target.value)} />
             <input type="file" ref={fileInputRef} className="hidden" onChange={e => e.target.files?.[0] && handleFileRead(e.target.files[0])} />
           </div>
-          
           <div className="flex flex-col">
-            <div className="flex justify-between items-center mb-4">
-              <label className="text-xs font-black text-gray-400 uppercase tracking-widest">Job Description</label>
-            </div>
+            <label className="text-xs font-black text-gray-400 uppercase tracking-widest mb-4">Job Description</label>
             <textarea className="w-full flex-grow p-6 rounded-3xl bg-gray-900 border-2 border-gray-800 text-white min-h-[400px] outline-none focus:border-indigo-500 font-mono text-xs transition-all" value={jobDescription} onChange={e => setJobDescription(e.target.value)} />
           </div>
         </div>
@@ -151,7 +142,7 @@ const model = genAI.getGenerativeModel({
 
         {result && (
           <div className="space-y-12 animate-in fade-in duration-700">
-            {/* ATS Result Card */}
+            {/* Result Cards */}
             <div className="bg-gray-900 p-10 rounded-[3rem] border border-gray-800 flex flex-col md:flex-row gap-10 items-center">
               <div className={`text-7xl font-black ${getScoreColor(result.section1.score)}`}>{result.section1.score}</div>
               <div className="space-y-4">
@@ -163,7 +154,6 @@ const model = genAI.getGenerativeModel({
               </div>
             </div>
 
-            {/* Analysis Result Card */}
             <div className="bg-gray-900 p-10 rounded-[3rem] border border-gray-800">
                <div className="flex gap-8 items-center border-b border-gray-800 pb-8 mb-8">
                   <div className={`text-7xl font-black ${getScoreColor(result.section2.score)}`}>{result.section2.score}</div>
@@ -174,7 +164,7 @@ const model = genAI.getGenerativeModel({
                </div>
                <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-8">
                   <div className="space-y-3">
-                    <h4 className="text-[10px] font-black text-emerald-400 uppercase tracking-widest">Strength Indicators (Fits)</h4>
+                    <h4 className="text-[10px] font-black text-emerald-400 uppercase tracking-widest">Strength Indicators</h4>
                     {result.section2.strengthIndicators.map((s: string, i: number) => (
                       <div key={i} className="bg-emerald-500/5 border border-emerald-500/20 p-4 rounded-2xl text-xs text-emerald-100 italic">0{i+1}. {s}</div>
                     ))}
@@ -186,19 +176,18 @@ const model = genAI.getGenerativeModel({
                     ))}
                   </div>
                </div>
-               <div className="bg-amber-500/10 border-2 border-dashed border-amber-500/30 p-8 rounded-[2rem] text-center shadow-inner">
+               <div className="bg-amber-500/10 border-2 border-dashed border-amber-500/30 p-8 rounded-[2rem] text-center">
                   <h4 className="text-amber-400 text-[10px] font-black uppercase mb-2 tracking-widest">Strategy: Action Step</h4>
                   <p className="text-amber-100 italic text-lg font-bold">"{result.section2.actionStep}"</p>
                </div>
             </div>
 
-            {/* Skills Mapping Card */}
             <div className="bg-gray-900 p-10 rounded-[3rem] border border-gray-800">
-               <h3 className="text-sm font-black uppercase mb-8 flex items-center gap-2 tracking-widest text-gray-400">Transferable Skills Mapping</h3>
+               <h3 className="text-sm font-black uppercase mb-8 text-gray-400">Transferable Skills Mapping</h3>
                <div className="grid grid-cols-1 md:grid-cols-2 gap-x-12 gap-y-8">
                   {result.skillsMapping.map((s: any, i: number) => (
                     <div key={i} className="space-y-3">
-                      <div className="flex justify-between text-[10px] font-black uppercase tracking-widest">
+                      <div className="flex justify-between text-[10px] font-black uppercase">
                         <span>{s.skill}</span>
                         <span className={getScoreColor(s.pct)}>{s.pct}%</span>
                       </div>
@@ -216,7 +205,7 @@ const model = genAI.getGenerativeModel({
   );
 };
 
-// INITIALIZATION LOGIC
+// INITIALIZATION
 const container = document.getElementById('root');
 if (container) {
   const root = createRoot(container);
