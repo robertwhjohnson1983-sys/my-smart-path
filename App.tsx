@@ -230,20 +230,19 @@ Provide analysis in the exact JSON format above.`;
   return (
     <div className="min-h-screen bg-linear-to-br from-gray-950 via-gray-900 to-gray-950 text-white">
       {/* HEADER */}
-      <div className="relative overflow-hidden bg-linear-to-b from-gray-900 to-gray-950 pt-16 pb-12 border-b border-gray-800">
+      <div className="relative overflow-hidden bg-linear-to-b from-gray-900 to-gray-950 pt-10 pb-12 border-b border-gray-800">
         <div className="absolute inset-0 bg-grid-white/5 bg-size-[20px_20px]"></div>
-        <div className="relative max-w-6xl mx-auto px-4 text-center">
-          <h1 className="text-5xl md:text-6xl font-black mb-4 bg-linear-to-r from-white via-gray-300 to-gray-400 bg-clip-text text-transparent uppercase tracking-tight">
-            My Smart Path
-          </h1>
-          <p className="text-sky-400 font-bold text-xl tracking-widest uppercase italic">
-            Intelligent Career Alignment
-          </p>
-          <div className="mt-8 flex flex-wrap justify-center gap-4">
-            <div className="px-4 py-2 bg-gray-800/50 backdrop-blur-sm rounded-full border border-gray-700">
-              <span className="text-sm text-gray-300">Model: </span>
-              <span className="text-sm font-bold text-emerald-400 ml-1">{selectedModel}</span>
-            </div>
+        <div className="relative max-w-8xl mx-auto text-center px-8">
+          <div className='w-full flex flex-col content-center'>
+            <img className='w-100 mx-auto align-middle' src="./my_path_logo.png" alt="my path logo" />
+            <h1 className="text-5xl md:text-6xl font-black mb-4 bg-linear-to-r from-white via-gray-300 to-gray-400 bg-clip-text text-transparent uppercase tracking-tight">
+              My Smart Path
+            </h1>
+            <p className="text-sky-400 font-bold text-xl tracking-widest uppercase italic">
+              Intelligent Career Alignment
+            </p>
+          </div>
+          <div className="mt-8 flex flex-wrap justify-center gap-4">            
             <div className="px-4 py-2 bg-gray-800/50 backdrop-blur-sm rounded-full border border-gray-700">
               <span className="text-sm text-gray-300">Status: </span>
               <span className="text-sm font-bold text-emerald-400 ml-1">Ready</span>
@@ -252,7 +251,7 @@ Provide analysis in the exact JSON format above.`;
         </div>
       </div>
 
-      <div className="max-w-6xl mx-auto py-12 px-4">
+      <div className="max-w-8xl mx-auto py-12 px-8">
         {/* INPUT SECTION */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-12">
           {/* RESUME BOX */}
@@ -276,7 +275,7 @@ Provide analysis in the exact JSON format above.`;
                     </svg>
                     Parsing...
                   </span>
-                ) : 'Upload PDF/Text'}
+                ) : <span className='flex'><img className='h-4 w-4 mr-1' src="./Drivelogo.png" alt="drive logo" />Upload pdf</span>}
               </button>
             </div>
             <textarea
@@ -296,7 +295,7 @@ Provide analysis in the exact JSON format above.`;
 
           {/* JOB DESCRIPTION BOX */}
           <div className="group">
-            <label className="text-sm font-bold text-gray-300 uppercase tracking-widest mb-4 flex items-center">
+            <label className="text-sm font-bold text-gray-300 uppercase tracking-widest py-2 mb-4 flex items-center ">
               <svg className="w-5 h-5 mr-2 text-sky-400" fill="currentColor" viewBox="0 0 20 20">
                 <path d="M9 4.804A7.968 7.968 0 005.5 4c-1.255 0-2.443.29-3.5.804v10A7.969 7.969 0 015.5 14c1.669 0 3.218.51 4.5 1.385A7.962 7.962 0 0114.5 14c1.255 0 2.443.29 3.5.804v-10A7.968 7.968 0 0014.5 4c-1.255 0-2.443.29-3.5.804V12a1 1 0 11-2 0V4.804z" />
               </svg>
