@@ -46,7 +46,7 @@ const App: React.FC = () => {
   };
 
   const analyzeMatch = async () => {
-    if (!resume.trim()) return setError('Please provide a resume.');
+   if (!resume.trim()) return setError('Please provide a resume to begin.');
     setLoading(true);
     setError(null);
     setResult(null);
