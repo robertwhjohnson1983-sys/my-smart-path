@@ -58,8 +58,8 @@ const App: React.FC = () => {
       if (!apiKey) throw new Error("API Key configuration missing in Vercel.");
 
       const genAI = new GoogleGenerativeAI(apiKey);
-      const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
-      
+      const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash-latest" });
+
       const prompt = `
         Return ONLY a JSON object. No markdown.
         Structure:
@@ -127,9 +127,9 @@ const App: React.FC = () => {
 
         {result && (
           <div className="bg-gray-900 p-10 rounded-[3rem] border border-gray-800 animate-in fade-in slide-in-from-bottom-4 duration-700">
-             <div className={`text-7xl font-black mb-4 ${getScoreColor(result.section2.score)}`}>{result.section2.score}%</div>
-             <h3 className="text-2xl font-black italic mb-4">"{result.section2.headline}"</h3>
-             <p className="text-gray-400 text-lg leading-relaxed">{result.section2.analysis}</p>
+            <div className={`text-7xl font-black mb-4 ${getScoreColor(result.section2.score)}`}>{result.section2.score}%</div>
+            <h3 className="text-2xl font-black italic mb-4">"{result.section2.headline}"</h3>
+            <p className="text-gray-400 text-lg leading-relaxed">{result.section2.analysis}</p>
           </div>
         )}
       </div>
