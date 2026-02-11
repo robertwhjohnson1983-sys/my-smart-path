@@ -234,7 +234,7 @@ Provide analysis in the exact JSON format above.`;
         <div className="absolute inset-0 bg-grid-white/5 bg-size-[20px_20px]"></div>
         <div className="relative max-w-8xl mx-auto text-center px-8">
           <div className='w-full flex flex-col content-center'>
-            <img className='w-100 mx-auto align-middle' src="./my_path_logo.png" alt="my path logo" />
+            <img className='w-100 mx-auto align-middle' src="https://i.ibb.co.com/x8z3FQBW/my-path-logo.png" alt="my path logo" />
             <h1 className="text-5xl md:text-6xl font-black mb-4 bg-linear-to-r from-white via-gray-300 to-gray-400 bg-clip-text text-transparent uppercase tracking-tight">
               My Smart Path
             </h1>
@@ -275,7 +275,7 @@ Provide analysis in the exact JSON format above.`;
                     </svg>
                     Parsing...
                   </span>
-                ) : <span className='flex'><img className='h-4 w-4 mr-1' src="./Drivelogo.png" alt="drive logo" />Upload pdf</span>}
+                ) : <span className='flex'><img className='h-4 w-4 mr-1' src="https://i.ibb.co.com/YFVNL4q3/Drivelogo.png" alt="drive logo" />Upload pdf</span>}
               </button>
             </div>
             <textarea
